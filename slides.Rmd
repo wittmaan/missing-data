@@ -1,0 +1,129 @@
+---
+title: "Missing Data"
+subtitle: "and how to deal with them..."
+author: "Andreas Wittmann"
+date: "2021/04/30 (updated: `r Sys.Date()`)"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+---
+
+class: center, middle
+
+# Machine Learning development from <br> model-centric to data-centric
+
+Andrew Ng: “When a system isn’t performing well, many teams instinctually try to improve the code. But for many practical applications, it’s more effective instead to focus on improving the data,”
+
+.footnote[
+https://www.deeplearning.ai/the-batch/issue-84/
+]
+
+---
+
+## model-centric view
+
+- Collect what data you can, and develop a model good enough to deal with the noise
+in the data.
+
+- Hold the data fixed and iteratively improve the code/model.
+
+## data-centric view
+- The consistency of the data is paramount. Use tools to improve the data quality
+$\rightarrow$ this will allow multiple models to do well.
+
+- Hold the model fixed and iteratively improve the data.
+
+
+.footnote[
+https://www.deeplearning.ai/the-batch/issue-84/
+]
+
+---
+
+# From big data to good data 
+
+MLOps' most important taks: ensure consistently high-quality data in all phases of 
+the ML project lifecycle.
+
+**Good data is:**
+
+- Defined consistently (definition of labels y is unambiguous )
+- Cover of important cases (good coverage of inputs x)
+- Has timely feedback from production data (distribution covers data drift and concept drift)
+- Sized appropriately
+
+.footnote[
+https://www.deeplearning.ai/the-batch/issue-84/
+]
+
+
+---
+
+# Good data without missing data
+
+- Getting high-quality data also includes tackling noise data
+
+- Data can become noise caused of missings
+
+## Missing data
+
+- Industrial data can have different challanges
+  - privacy
+  - expense
+  - machine or human mistakes
+
+---
+
+# The problem
+
+- Many AI/ML/Data science methods are developed for complete data
+
+- Inappropriate approach imposes noise or bias on data
+
+---
+
+class: inverse, center, middle
+
+# Types of missingness
+
+---
+
+# Missing completely at random (MCAR)
+
+---
+
+# Missing at random (MAR)
+
+---
+
+# Missing not at random (MNAR)
+
+---
+
+
+class: inverse, center, middle
+
+# How to deal with missingness
+
+---
+
+## Dropping (ignoring) missing values
+
+## Imputation techniques
+
+- Single imputation
+
+- Multiple imputation
+
+---
+
+# Thank you! Questions?
+
+
+
+# Literature
