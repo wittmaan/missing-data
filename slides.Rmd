@@ -2,7 +2,7 @@
 title: "Missing Data"
 subtitle: "and how to deal with them..."
 author: "Andreas Wittmann"
-date: "2021/04/30 (updated: `r Sys.Date()`)"
+date: "2021/05/14 (updated: `r Sys.Date()`)"
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -97,13 +97,36 @@ class: inverse, center, middle
 
 # Missing completely at random (MCAR)
 
+- no particular reason the data is missing
+
+- no relationship / dependency between missingness and observed values 
+  - men or women are not more inclined to share their salary info
+  - gender does not impact on salary
+
 ---
 
 # Missing at random (MAR)
 
+- there is a relationship / dependency between missing values and observed ones, but not the missing values
+
 ---
 
 # Missing not at random (MNAR)
+
+- the cause of missingness it not known and we cannot draw any conclusion from observed data
+
+
+---
+
+# Hints
+
+- Distinguishing the type is missingness is not easy, sometimes it's impossible
+
+- The size and balance of data must be considered before distinguising the type
+
+- Rule of thumb: assume missing at random unless there is a good reason not to!
+
+
 
 ---
 
@@ -117,12 +140,13 @@ class: inverse, center, middle
 ## Dropping (ignoring) missing values
 
 - Listwise deletion: cases with missing data are just dropped
+  - sample size
+  - loss of information
+  - induced error of imputation
 
 ## Imputation techniques
 
 - Single imputation
-
-- Mean substitution
 
 - Multiple imputation through support vector machines
 
@@ -135,8 +159,63 @@ class: inverse, center, middle
 
 ---
 
+- Discriminative models
+
+$$X_{\text{miss}} = f(X_{\text{obs}}) (\text{MAR})$$
+
+assume corelation between variables with missing values and the observed variables
+
+$\rightarrow$ find corelation by estimating a function
+
+- Generative models
+
+$$P(X_{\text{miss}})(\text{MCAR})$$
+(estimate normal distribution)
+
+and
+
+$$P(X_{\text{miss}} \mid X_{\text{obs}})(\text{MAR})$$
+
+(estimate conditional distribution)
+
+---
+# Single imputation
+
+- Mean substitution (generative)
+- K-nearest neighbor (KNN) (discriminative)
+- Discriminative model training 
+  - linear regression
+  - neural nets
+  - random forest
+
+
+$\rightarrow$ don't account for uncertainty
+
+---
+
+# Multiple Imputation
+
+- accounts for uncertainty by creating multiple imputed version of data
+
+- Bootstrapping (subselection of the data, do the imputation, ...)
+
+- Generative models (draw samples from the estimated distribution)
+
+- MICE (multivariate imputation by chained equations)
+
+  - starts with initial imputation e.g. mean imputation
+  - at each cycle only one variable is considered missing and is imputed via other variables
+  - the whole process may be repeated
+
+- denoising autoencoder
+
+---
+
+
 # Thank you! Questions?
 
 
 
 # Literature
+
+- youtube: Reza Sahraeian - The industrial challenge of missing data | PyData Eindhoven 2020
