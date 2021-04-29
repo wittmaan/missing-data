@@ -77,6 +77,8 @@ https://www.deeplearning.ai/the-batch/issue-84/
   - expense
   - machine or human mistakes
 
+(describe when missing data can happen and how)
+
 ---
 
 # The problem
@@ -114,9 +116,20 @@ class: inverse, center, middle
 
 ## Dropping (ignoring) missing values
 
+- Listwise deletion: cases with missing data are just dropped
+
 ## Imputation techniques
 
 - Single imputation
+
+- Mean substitution
+
+- Multiple imputation through support vector machines
+
+- Multiple imputation by chained equations
+
+- Data augmentation
+
 
 - Multiple imputation
 
