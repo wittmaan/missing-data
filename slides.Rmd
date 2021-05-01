@@ -77,6 +77,8 @@ https://www.deeplearning.ai/the-batch/issue-84/
   - expense
   - machine or human mistakes
 
+- Missing data in bug issues on non-mandatory fields
+
 (describe when missing data can happen and how)
 
 ---
@@ -86,6 +88,25 @@ https://www.deeplearning.ai/the-batch/issue-84/
 - Many AI/ML/Data science methods are developed for complete data
 
 - Inappropriate approach imposes noise or bias on data
+
+---
+
+# Terminology
+
+- **full data** $Z=(Z_{\text{obs}}, Z_{\text{mis}})$
+- **observed data** $Z_{\text{obs}}$ 
+- **missing data** $Z_{\text{mis}}$
+
+- Given $n \times p$ data matrix $Z$, which can contain missing data
+
+- $Z = (Y, X)$, i.e. $Y$ matrix dependent and $X$ matrix independent variables
+
+- indicator matrix $R$ build from $Z$ as
+
+$$R_{ij} = \left\{\begin{array}{cl}
+              1 & \textrm{if } Z_{ij} \textrm{ obs} \\
+              0 & \textrm{if } Z_{ij} \textrm{ mis} \\
+            \end{array} \right. \quad \text{for} \ i=1,\ldots,n \ \text{and} \ j=1,\ldots,p.$$
 
 ---
 
@@ -211,6 +232,20 @@ $\rightarrow$ don't account for uncertainty
 
 ---
 
+# Takeaways
+
+- understand the missing type and data before anything (tips: missing rate, balance, correlation, data size, ...)
+
+- There is no single magical method to deal with missingness, the right choice depends on your data
+
+- Benefit from multiple imputation to account for uncertainty
+
+- Be vigilant in using open source packages
+
+- Check literature for new methodologies
+
+---
+
 
 # Thank you! Questions?
 
@@ -219,3 +254,23 @@ $\rightarrow$ don't account for uncertainty
 # Literature
 
 - youtube: Reza Sahraeian - The industrial challenge of missing data | PyData Eindhoven 2020
+
+- https://bookdown.org/mwheymans/bookmi/
+
+- https://stefvanbuuren.name/publication/vanbuuren-2018/
+
+- https://htmlpreview.github.io/?https://raw.githubusercontent.com/ehsanx/spph504-007/master/Lab6/lab6part1.html
+
+- https://rstudio-pubs-static.s3.amazonaws.com/445649_5f323f9cc6aa4333b404882e67e9c344.html
+
+- https://biostat.wisc.edu/~lmao/missing_data/Chap%201.%20Introduction.pdf
+
+- https://arxiv.org/abs/1805.07405
+
+- https://qdata.github.io/deep2Read//deep2reproduce/2019Fall//T28_SuYiwenys5kh_missingDataByNN.pdf
+
+- https://www.youtube.com/watch?v=dIiGW2vvCF0
+
+- https://arxiv.org/abs/1806.02920
+
+- https://hal.inria.fr/hal-03044144/file/how_to_deal_with_missing_data_in_supervised_deep_learning_.pdf
