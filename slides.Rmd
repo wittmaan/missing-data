@@ -13,6 +13,15 @@ output:
 
 ---
 
+```{r, echo=FALSE, message=FALSE}
+library(RefManageR)
+BibOptions(check.entries = FALSE, bib.style = "authoryear", style = "markdown", dashed = TRUE)
+
+bib <- ReadBib("slides.bib")
+ui <- "- "
+```
+
+
 class: center, middle
 
 # Machine Learning development from <br> model-centric to data-centric
@@ -70,6 +79,8 @@ https://www.deeplearning.ai/the-batch/issue-84/
 
 - Data can become noise caused of missings
 
+- Using only the complete cases for the analysis can lead to a dramatic information loss
+
 ## Missing data
 
 - Industrial data can have different challanges
@@ -118,6 +129,15 @@ class: inverse, center, middle
 
 # Missing completely at random (MCAR)
 
+Probability of missingness is independent from observed and missing values
+
+$$P(r_i \mid z_i) = P(r_i \mid z_{i,\,\textrm{obs}}, z_{i,\,\textrm{mis}}) = P(r_i), \quad \text{for} \ i=1,\ldots,n,$$
+
+where $z_{i,\,\textrm{obs}}$ represents the observed and $z_{i,\,\textrm{mis}}$ the missing values from the $i$-th row $z_i$ of
+the data matrix $Z$.
+
+
+
 - no particular reason the data is missing
 
 - no relationship / dependency between missingness and observed values 
@@ -128,11 +148,20 @@ class: inverse, center, middle
 
 # Missing at random (MAR)
 
+The probability for missigness of values is only dependent of the 
+observed values $z_{i,\,\textrm{obs}}$ 
+
+$$P(r_i \mid z_i) = P(r_i \mid z_{i,\,\textrm{obs}}, z_{i,\,\textrm{mis}}) = P(r_i \mid z_{i,\,\textrm{obs}}), \quad \text{for} \ i=1,\ldots,n.$$
+
 - there is a relationship / dependency between missing values and observed ones, but not the missing values
 
 ---
 
 # Missing not at random (MNAR)
+
+The probability for the missigness of values is dependent of the observed $z_{i,\,\textrm{obs}}$ and unobserved values $z_{i,\,\textrm{mis}}$
+
+$$P(r_i \mid z_i) = P(r_i \mid z_{i,\,\textrm{obs}}, z_{i,\,\textrm{mis}}), \quad \text{for} \ i=1,\ldots,n.$$
 
 - the cause of missingness it not known and we cannot draw any conclusion from observed data
 
@@ -160,16 +189,25 @@ class: inverse, center, middle
 
 ## Dropping (ignoring) missing values
 
-- Listwise deletion: cases with missing data are just dropped
-  - sample size
-  - loss of information
-  - induced error of imputation
+### Listwise deletion
+  
+- Cases with missing values are excluded from the data set. 
+
+- Only the complete cases are analyzed or used.  
+
+- Loss of information dependent on the fraction of missing data
+  
+---
 
 ## Imputation techniques
 
-- Single imputation
+### Mean/Median imputation
 
-- Multiple imputation through support vector machines
+Missing values are replaced by the mean value for quantitative variables and by the most frequently occurring category for qualitative variables
+
+### Multiple imputation through support vector machines (`r Citet(bib, "Richman2007")`)
+
+Missing values are replaced by repeated application of a support vector regression
 
 - Multiple imputation by chained equations
 
@@ -252,6 +290,18 @@ $\rightarrow$ don't account for uncertainty
 
 
 # Literature
+
+```{r, results='asis', echo=FALSE, warning=FALSE, message=FALSE}
+writeLines(ui)
+print(bib[key="Richman2007"], 
+      .opts = list(check.entries = FALSE, 
+                   style = "html", 
+                   bib.style = "authoryear"))
+```
+ 
+```{r, results='asis', echo=FALSE}
+PrintBibliography(bib, )
+```
 
 - youtube: Reza Sahraeian - The industrial challenge of missing data | PyData Eindhoven 2020
 
