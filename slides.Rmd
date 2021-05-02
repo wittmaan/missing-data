@@ -81,16 +81,14 @@ https://www.deeplearning.ai/the-batch/issue-84/
 
 - Using only the complete cases for the analysis can lead to a dramatic information loss
 
-## Missing data
+# Missing data
 
-- Industrial data can have different challanges
-  - privacy
-  - expense
-  - machine or human mistakes
-
-- Missing data in bug issues on non-mandatory fields
-
-(describe when missing data can happen and how)
+Can arise for many reasons:
+  - Non-Response e.g. in surveys
+  - Lost data due to machine or human mistakes
+  - Bug issues in non-mandatory fields
+  - Privacy
+  - ...
 
 ---
 
@@ -99,6 +97,10 @@ https://www.deeplearning.ai/the-batch/issue-84/
 - Many AI/ML/Data science methods are developed for complete data
 
 - Inappropriate approach imposes noise or bias on data
+
+- Missing data can lead to the risk of incorrect conclusions due to absence of relevant information leading to invalid results
+
+- The quality of statistical analysis can be only good as the quality of the data
 
 ---
 
@@ -129,20 +131,18 @@ class: inverse, center, middle
 
 # Missing completely at random (MCAR)
 
-Probability of missingness is independent from observed and missing values
+Probability of missingness is completely independent from observed and unobserved/missing values
 
 $$P(r_i \mid z_i) = P(r_i \mid z_{i,\,\textrm{obs}}, z_{i,\,\textrm{mis}}) = P(r_i), \quad \text{for} \ i=1,\ldots,n,$$
 
 where $z_{i,\,\textrm{obs}}$ represents the observed and $z_{i,\,\textrm{mis}}$ the missing values from the $i$-th row $z_i$ of
 the data matrix $Z$.
 
+- No particular reason that the data is missing
 
+- Often an unrealistic assumption
 
-- no particular reason the data is missing
-
-- no relationship / dependency between missingness and observed values 
-  - men or women are not more inclined to share their salary info
-  - gender does not impact on salary
+- **Example:** Weighing scale that ran out of batteries 
 
 ---
 
@@ -153,7 +153,13 @@ observed values $z_{i,\,\textrm{obs}}$
 
 $$P(r_i \mid z_i) = P(r_i \mid z_{i,\,\textrm{obs}}, z_{i,\,\textrm{mis}}) = P(r_i \mid z_{i,\,\textrm{obs}}), \quad \text{for} \ i=1,\ldots,n.$$
 
-- there is a relationship / dependency between missing values and observed ones, but not the missing values
+- Relationship between missing values and observed ones
+
+- More realistic than MCAR 
+
+- Modern missing data methods generally start from the MAR assumption
+
+- **Example:** Weighing scale may produce more missing data when placed on a soft surface and type of surface is known 
 
 ---
 
@@ -163,23 +169,46 @@ The probability for the missigness of values is dependent of the observed $z_{i,
 
 $$P(r_i \mid z_i) = P(r_i \mid z_{i,\,\textrm{obs}}, z_{i,\,\textrm{mis}}), \quad \text{for} \ i=1,\ldots,n.$$
 
-- the cause of missingness it not known and we cannot draw any conclusion from observed data
+- Cause of missingness it not known and we cannot draw any conclusion from observed data
+
+- **Example:** Weighing scale mechanism may wear out over time, but time is not part of the dataset
 
 
 ---
 
-# Hints
+# Best practices (`r Citet(bib, "Buuren2018")`)
 
 - Distinguishing the type is missingness is not easy, sometimes it's impossible
 
 - The size and balance of data must be considered before distinguising the type
 
+- Under MCAR, one can analyze the observed observation and ignore discard any missing observations
+
 - Rule of thumb: assume missing at random unless there is a good reason not to!
-
-
 
 ---
 
+
+class: inverse, center, middle
+
+# Look at the data
+
+---
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+require(VIM)
+require(mice)
+data(nhanes)
+nhanes
+```
+
+---
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+md.pattern(nhanes)
+```
+
+---
 
 class: inverse, center, middle
 
@@ -209,12 +238,17 @@ Missing values are replaced by the mean value for quantitative variables and by 
 
 Missing values are replaced by repeated application of a support vector regression
 
-- Multiple imputation by chained equations
+---
 
-- Data augmentation
+## Imputation techniques
 
+### Multiple imputation by chained equations (`r Citet(bib, "Raghunathan2001")`)
 
-- Multiple imputation
+Missing values are replaced by chained regression, where e.g. five complete datasets are generated
+
+### Data augmentation  (`r Citet(bib, "Schafer1997")`)
+
+Use Monte Carlo Methods to generate e.g. five complete datasets
 
 ---
 
@@ -291,6 +325,7 @@ $\rightarrow$ don't account for uncertainty
 
 # Literature
 
+<!--
 ```{r, results='asis', echo=FALSE, warning=FALSE, message=FALSE}
 writeLines(ui)
 print(bib[key="Richman2007"], 
@@ -298,9 +333,10 @@ print(bib[key="Richman2007"],
                    style = "html", 
                    bib.style = "authoryear"))
 ```
+-->
  
 ```{r, results='asis', echo=FALSE}
-PrintBibliography(bib, )
+PrintBibliography(bib)
 ```
 
 - youtube: Reza Sahraeian - The industrial challenge of missing data | PyData Eindhoven 2020
