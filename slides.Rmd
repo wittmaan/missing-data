@@ -10,6 +10,7 @@ output:
       highlightStyle: github
       highlightLines: true
       countIncrementalSlides: false
+      # ratio: 16:9
 
 ---
 
@@ -195,18 +196,79 @@ class: inverse, center, middle
 
 ---
 
+## A small data set with non-monotone missing values.
+
+.pull-left[
+- age: Age group (1=20-39, 2=40-59, 3=60+)
+
+- bmi: Body mass index (kg/m**2)
+
+- hyp: Hypertensive (1=no,2=yes)
+
+- chl: Total serum cholesterol (mg/dL)
+]
+
+.pull-right[
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
+require(knitr)
 require(VIM)
 require(mice)
 data(nhanes)
-nhanes
+kable(nhanes[1:10,], format = "html")
+```
+]
+
+
+---
+
+.pull-left[
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+tmp <- md.pattern(nhanes)
+```
+]
+
+.pull-right[
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+tmp
+```
+
+
+]
+
+---
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+require(DataExplorer)
+plot_missing(nhanes)
+```
+
+
+---
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+require(VIM)
+marginplot(nhanes[, c("hyp", "bmi")])
 ```
 
 ---
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
-md.pattern(nhanes)
+require(VIM)
+marginplot(nhanes[, c("hyp", "chl")])
 ```
+
+---
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+require(VIM)
+marginplot(nhanes[, c("chl", "bmi")])
+```
+
+---
+
+distribution of observed data given the other variable is observed
+for MCAR, blue and red box plots should be similar
 
 ---
 
@@ -226,6 +288,12 @@ class: inverse, center, middle
 
 - Loss of information dependent on the fraction of missing data
   
+- Often the default way of handling incomplete data 
+
+- If the data are MCAR, listwise deletion produces unbiased estimates of means, variances and regression weights.
+
+- `r Citet(bib, "Schafer2002")`: *If a missing data problem can be resolved by discarding only a small part of the sample, then the method can be quite effective.*
+
 ---
 
 ## Imputation techniques
@@ -233,6 +301,41 @@ class: inverse, center, middle
 ### Mean/Median imputation
 
 Missing values are replaced by the mean value for quantitative variables and by the most frequently occurring category for qualitative variables
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+require(mice)
+source("mi.hist.R")
+imp <- mice(airquality, 
+                   method = "mean", # Replace by mean of the other values
+                   m = 1, # Number of multiple imputations. 
+                   maxit = 1) # Number of iteration; mostly useful for  convergence
+
+
+lwd <- 0.6
+data <- complete(imp)
+Yobs <- airquality[,"Ozone"]
+Yimp <- data[,"Ozone"]
+mi.hist(Yimp, Yobs,b=seq(-20,200,10),type="continuous",
+        gray=F,lwd = lwd,
+        obs.lwd=1.5, mis.lwd=1.5, imp.lwd=1.5,
+        obs.col=mdc(4), mis.col=mdc(5), imp.col="transparent",
+        mlt=0.08,main="",xlab="Ozone (ppb)",
+        axes = FALSE)
+box(lwd = 1)
+plot(data[cci(imp),2:1],col=mdc(1), lwd=1.5,ylab="Ozone (ppb)",
+     xlab="Solar Radiation (lang)",ylim=c(-10,170),
+     axes = FALSE)
+points(data[ici(imp),2:1],col=mdc(2),lwd=1.5)
+axis(1, lwd = lwd)
+axis(2, lwd = lwd, las = 1)
+box(lwd = 1)
+
+```
+
+
+---
+
+## Imputation techniques
 
 ### Multiple imputation through support vector machines (`r Citet(bib, "Richman2007")`)
 
