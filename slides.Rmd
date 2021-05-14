@@ -6,11 +6,18 @@ date: "2021/05/14 (updated: `r Sys.Date()`)"
 output:
   xaringan::moon_reader:
     lib_dir: libs
+    css: [default-fonts, default, slides.css]
     nature:
       highlightStyle: github
       highlightLines: true
+      highlightLanguage: ["r", "css", "yaml"]
       countIncrementalSlides: false
-      # ratio: 16:9
+      slideNumberFormat: |
+        <div class="progress-bar-container">
+          <div class="progress-bar" style="width: calc(%current% / %total% * 100%);">
+          </div>
+        </div>
+      ratio: "16:9"
 
 ---
 
@@ -22,8 +29,14 @@ bib <- ReadBib("slides.bib")
 ui <- "- "
 ```
 
+```{r setup, echo=FALSE, message=FALSE, include=FALSE}
+knitr::opts_chunk$set(fig.path="figs/", echo=FALSE, warning=FALSE, message=FALSE, fig.retina=3, fig.asp=.5, out.width='100%', fig.showtext = TRUE, comment = NULL)
+```
+
+
 
 class: center, middle
+background-color: #7899d4
 
 # Machine Learning development from <br> model-centric to data-centric
 
@@ -125,6 +138,7 @@ $$R_{ij} = \left\{\begin{array}{cl}
 ---
 
 class: inverse, center, middle
+background-color: #7899d4
 
 # Types of missingness
 
@@ -191,6 +205,7 @@ $$P(r_i \mid z_i) = P(r_i \mid z_{i,\,\textrm{obs}}, z_{i,\,\textrm{mis}}), \qua
 
 
 class: inverse, center, middle
+background-color: #7899d4
 
 # Look at the data
 
@@ -273,6 +288,7 @@ for MCAR, blue and red box plots should be similar
 ---
 
 class: inverse, center, middle
+background-color: #7899d4
 
 # How to deal with missingness
 
@@ -302,40 +318,104 @@ class: inverse, center, middle
 
 Missing values are replaced by the mean value for quantitative variables and by the most frequently occurring category for qualitative variables
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
 require(mice)
-source("mi.hist.R")
+require(dplyr)
+require(reshape2)
+
 imp <- mice(airquality, 
                    method = "mean", # Replace by mean of the other values
                    m = 1, # Number of multiple imputations. 
-                   maxit = 1) # Number of iteration; mostly useful for  convergence
+                   maxit = 1,
+                  print=FALSE
+            ) # Number of iteration; mostly useful for  convergence
 
-
-lwd <- 0.6
 data <- complete(imp)
-Yobs <- airquality[,"Ozone"]
-Yimp <- data[,"Ozone"]
-mi.hist(Yimp, Yobs,b=seq(-20,200,10),type="continuous",
-        gray=F,lwd = lwd,
-        obs.lwd=1.5, mis.lwd=1.5, imp.lwd=1.5,
-        obs.col=mdc(4), mis.col=mdc(5), imp.col="transparent",
-        mlt=0.08,main="",xlab="Ozone (ppb)",
-        axes = FALSE)
-box(lwd = 1)
-plot(data[cci(imp),2:1],col=mdc(1), lwd=1.5,ylab="Ozone (ppb)",
-     xlab="Solar Radiation (lang)",ylim=c(-10,170),
-     axes = FALSE)
-points(data[ici(imp),2:1],col=mdc(2),lwd=1.5)
-axis(1, lwd = lwd)
-axis(2, lwd = lwd, las = 1)
-box(lwd = 1)
+#airquality.ext <- data.frame(airquality, Ozone.imp=data[,"Ozone"]) %>% #melt(measure.vars=c("Ozone", "Ozone.imp"), variable.name="type")
+airquality.ext <- airquality %>%
+  mutate(
+    type=ifelse(is.na(Ozone), "Ozone.imp", "Ozone"),
+    Ozone.imp=ifelse(is.na(Ozone), data[,"Ozone"], Ozone)
+    )
+```
 
+---
+
+
+### Mean/Median imputation
+
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+require(ggplot2)
+require(gridExtra)
+require(viridis)
+
+p1 <- airquality.ext %>% 
+  ggplot(aes(x=Ozone.imp, fill=type)) +  
+  geom_histogram(position="dodge") +
+  theme_minimal() +
+  scale_fill_viridis_d()
+
+p2 <- airquality.ext %>%
+  ggplot(aes(y=Ozone.imp, x=Solar.R, colour=type)) +
+  geom_point() +
+  theme_minimal() +
+  scale_color_viridis_d() 
+
+grid.arrange(p1, p2, ncol=2)
 ```
 
 
 ---
 
 ## Imputation techniques
+
+### Regression Imputation
+
+- Regression imputation incorporates knowledge of other variables with the idea of producing smarter imputations. 
+
+- The first step involves building a model from the observed data. 
+
+- Predictions for the incomplete cases are then calculated under the fitted model, and serve as replacements for the missing data.
+
+---
+
+### Regression Imputation
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+fit <- lm(Ozone ~ Solar.R, data = airquality.ext)
+pred <- predict(fit, newdata = data.frame(Solar.R = airquality.ext$Solar.R))
+
+airquality.ext2 <- airquality %>%
+  mutate(
+    type=ifelse(is.na(Ozone), "Ozone.imp", "Ozone"),
+    Ozone.imp=ifelse(is.na(Ozone), pred, Ozone)
+    )
+```
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+require(ggplot2)
+require(gridExtra)
+require(viridis)
+
+p1 <- airquality.ext2 %>% 
+  ggplot(aes(x=Ozone.imp, fill=type)) +  
+  geom_histogram(position="dodge") +
+  theme_minimal() +
+  scale_fill_viridis_d()
+
+p2 <- airquality.ext2 %>%
+  ggplot(aes(y=Ozone.imp, x=Solar.R, colour=type)) +
+  geom_point() +
+  theme_minimal() +
+  scale_color_viridis_d() 
+
+grid.arrange(p1, p2, ncol=2)
+```
+
+---
 
 ### Multiple imputation through support vector machines (`r Citet(bib, "Richman2007")`)
 
