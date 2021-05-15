@@ -12,12 +12,8 @@ output:
       highlightLines: true
       highlightLanguage: ["r", "css", "yaml"]
       countIncrementalSlides: false
-      slideNumberFormat: |
-        <div class="progress-bar-container">
-          <div class="progress-bar" style="width: calc(%current% / %total% * 100%);">
-          </div>
-        </div>
-      ratio: "16:9"
+
+      
 
 ---
 
@@ -31,6 +27,10 @@ ui <- "- "
 
 ```{r setup, echo=FALSE, message=FALSE, include=FALSE}
 knitr::opts_chunk$set(fig.path="figs/", echo=FALSE, warning=FALSE, message=FALSE, fig.retina=3, fig.asp=.5, out.width='100%', fig.showtext = TRUE, comment = NULL)
+
+require(ggplot2)
+require(gridExtra)
+require(viridis)
 ```
 
 
@@ -137,7 +137,7 @@ $$R_{ij} = \left\{\begin{array}{cl}
 
 ---
 
-class: inverse, center, middle
+class: center, middle
 background-color: #7899d4
 
 # Types of missingness
@@ -204,81 +204,74 @@ $$P(r_i \mid z_i) = P(r_i \mid z_{i,\,\textrm{obs}}, z_{i,\,\textrm{mis}}), \qua
 ---
 
 
-class: inverse, center, middle
+class: center, middle
 background-color: #7899d4
 
 # Look at the data
 
 ---
 
-## A small data set with non-monotone missing values.
+## airquality dataset
 
-.pull-left[
-- age: Age group (1=20-39, 2=40-59, 3=60+)
+- Daily air quality measurements in New York, May to September 1973.
 
-- bmi: Body mass index (kg/m**2)
+- Daily readings of the following air quality values for May 1, 1973 (a Tuesday) to September 30, 1973.
 
-- hyp: Hypertensive (1=no,2=yes)
+  - **Ozone:** Mean ozone in parts per billion from 1300 to 1500 hours at Roosevelt Island
 
-- chl: Total serum cholesterol (mg/dL)
-]
+  - **Solar.R:** Solar radiation in Langleys in the frequency band 4000–7700 Angstroms from 0800 to 1200 hours at Central Park
 
-.pull-right[
+  - **Wind:** Average wind speed in miles per hour at 0700 and 1000 hours at LaGuardia Airport
+
+  - **Temp:** Maximum daily temperature in degrees Fahrenheit at La Guardia Airport.
+  
+Source: The data were obtained from the New York State Department of Conservation (ozone data) and the National Weather Service (meteorological data).
+
+---
+
+## airquality dataset
+
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 require(knitr)
 require(VIM)
 require(mice)
-data(nhanes)
-kable(nhanes[1:10,], format = "html")
+kable(airquality[1:10,], format = "html")
 ```
-]
 
 
 ---
 
-.pull-left[
+## missing data pattern
+
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
-tmp <- md.pattern(nhanes)
+p <- md.pattern(airquality)
 ```
-]
-
-.pull-right[
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-tmp
-```
-
-
-]
 
 ---
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
+## missing value frequency
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
 require(DataExplorer)
-plot_missing(nhanes)
+p <- plot_missing(airquality) +   
+  theme_minimal() +
+  scale_fill_viridis_d() 
 ```
 
-
----
-
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
-require(VIM)
-marginplot(nhanes[, c("hyp", "bmi")])
-```
-
----
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-require(VIM)
-marginplot(nhanes[, c("hyp", "chl")])
+p
 ```
 
 ---
 
+## marginplot
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 require(VIM)
-marginplot(nhanes[, c("chl", "bmi")])
+marginplot(airquality[, c("Solar.R", "Ozone")])
 ```
+
+
 
 ---
 
@@ -287,7 +280,7 @@ for MCAR, blue and red box plots should be similar
 
 ---
 
-class: inverse, center, middle
+class: center, middle
 background-color: #7899d4
 
 # How to deal with missingness
@@ -347,10 +340,6 @@ airquality.ext <- airquality %>%
 
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
-require(ggplot2)
-require(gridExtra)
-require(viridis)
-
 p1 <- airquality.ext %>% 
   ggplot(aes(x=Ozone.imp, fill=type)) +  
   geom_histogram(position="dodge") +
@@ -373,19 +362,18 @@ grid.arrange(p1, p2, ncol=2)
 
 ### Regression Imputation
 
-- Regression imputation incorporates knowledge of other variables with the idea of producing smarter imputations. 
-
-- The first step involves building a model from the observed data. 
-
-- Predictions for the incomplete cases are then calculated under the fitted model, and serve as replacements for the missing data.
-
----
-
-### Regression Imputation
-
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
 fit <- lm(Ozone ~ Solar.R, data = airquality.ext)
 pred <- predict(fit, newdata = data.frame(Solar.R = airquality.ext$Solar.R))
+
+# imp2 <- mice(airquality, 
+#                    method = "norm.predict", # Replace by mean of the other values
+#                    m = 1, # Number of multiple imputations. 
+#                    maxit = 1,
+#                   print=FALSE
+#             ) # Number of iteration; mostly useful for  convergence
+# 
+# data2 <- complete(imp2)
 
 airquality.ext2 <- airquality %>%
   mutate(
@@ -393,6 +381,25 @@ airquality.ext2 <- airquality %>%
     Ozone.imp=ifelse(is.na(Ozone), pred, Ozone)
     )
 ```
+
+- Regression imputation incorporates knowledge of other variables with the idea of producing smarter imputations. 
+
+- The first step involves building a model from the observed data. 
+
+- Predictions for the incomplete cases are then calculated under the fitted model, and serve as replacements for the missing data.
+
+```{r}
+require(equatiomatic)
+
+extract_eq(fit, use_coefs = FALSE)
+```
+
+
+---
+
+### Regression Imputation
+
+
 
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
@@ -414,6 +421,26 @@ p2 <- airquality.ext2 %>%
 
 grid.arrange(p1, p2, ncol=2)
 ```
+
+---
+
+### Regression Imputation
+
+```{r}
+fit2 <- lm(Ozone ~ Solar.R, data = airquality)
+summary(fit2)
+```
+
+
+---
+
+### Regression Imputation
+
+```{r}
+fit3 <- lm(Ozone.imp ~ Solar.R, data = airquality.ext2)
+summary(fit3)
+```
+
 
 ---
 
@@ -527,6 +554,8 @@ PrintBibliography(bib)
 - https://bookdown.org/mwheymans/bookmi/
 
 - https://stefvanbuuren.name/publication/vanbuuren-2018/
+
+- http://pol346.com/2021/week10_02.html#1
 
 - https://htmlpreview.github.io/?https://raw.githubusercontent.com/ehsanx/spph504-007/master/Lab6/lab6part1.html
 
