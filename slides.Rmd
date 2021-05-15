@@ -272,9 +272,6 @@ marginplot(airquality[, c("Solar.R", "Ozone")])
 ```
 
 
-
----
-
 distribution of observed data given the other variable is observed
 for MCAR, blue and red box plots should be similar
 
@@ -443,6 +440,32 @@ summary(fit3)
 
 
 ---
+
+## Imputation techniques
+
+### Multiple imputation by chained equations (`r Citet(bib, "Raghunathan2001")`)
+
+Missing values are replaced by chained regression, where $m$ complete datasets are generated
+
+In multiple imputation data analysis, three steps will be taken:
+
+- Step 0: Set imputation model
+- Step 1: The incomplete dataset will be imputed $m$ times;
+- Step 2: Each complete dataset will be analyzed separately by proper standard regression model;
+- Step 3: The analysis results will be pooled together by Rubin’s rules
+
+---
+
+
+### Multiple imputation
+
+![](figs/multiple_imputation.png)
+
+
+source: https://stefvanbuuren.name/fimd/sec-nutshell.html
+
+---
+
 
 ### Multiple imputation through support vector machines (`r Citet(bib, "Richman2007")`)
 
