@@ -2,7 +2,7 @@
 title: "Missing Data"
 subtitle: "and how to deal with them..."
 author: "Andreas Wittmann"
-date: "2021/05/14 (updated: `r Sys.Date()`)"
+date: "2021/05/21 (updated: `r Sys.Date()`)"
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -96,6 +96,8 @@ https://www.deeplearning.ai/the-batch/issue-84/
 - Using only the complete cases for the analysis can lead to a dramatic information loss
 
 # Missing data
+
+**Missing data is everwhere** sooner or later anyone who does statistics will encounter missing data
 
 Can arise for many reasons:
   - Non-Response e.g. in surveys
@@ -271,9 +273,14 @@ require(VIM)
 marginplot(airquality[, c("Solar.R", "Ozone")])
 ```
 
+- blue one summarizes the distribution of Ozone when Solar.R is missing,  red one summarizes it when it is unobserved
 
-distribution of observed data given the other variable is observed
+- distribution of observed data given the other variable is observed
 for MCAR, blue and red box plots should be similar
+
+<!--
+- if MCAR is violated, complete case analysis will be biased
+-->
 
 ---
 
@@ -281,6 +288,19 @@ class: center, middle
 background-color: #7899d4
 
 # How to deal with missingness
+
+---
+
+## Missing values methods
+
+- Dropping missing values
+
+- Imputation techniques
+
+  - Single imputation
+
+  - Multiple imputation
+
 
 ---
 
@@ -301,21 +321,6 @@ background-color: #7899d4
 - `r Citet(bib, "Schafer2002")`: *If a missing data problem can be resolved by discarding only a small part of the sample, then the method can be quite effective.*
 
 
----
-
-## Imputation techniques
-
-### Single imputation
-
-#### Mean/Median imputation
-
-#### Regression Imputation
-
-#### Imputation via
-
--  neural nets
-
--  random forest
 
 
 ---
@@ -377,24 +382,6 @@ p2 <- airquality.ext %>%
   scale_color_viridis_d() 
 
 grid.arrange(p1, p2, ncol=2)
-```
-
----
-
-## Mean/Median imputation
-
-```{r}
-fit2 <- lm(Ozone ~ Solar.R, data = airquality)
-summary(fit2)
-```
-
----
-
-## Mean/Median imputation
-
-```{r}
-fit4 <- lm(Ozone.imp ~ Solar.R, data = airquality.ext)
-summary(fit4)
 ```
 
 ---
@@ -461,29 +448,50 @@ grid.arrange(p1, p2, ncol=2)
 
 ---
 
-## Regression Imputation
+## Stochastic Regression Imputation
 
-```{r}
-fit2 <- lm(Ozone ~ Solar.R, data = airquality)
-summary(fit2)
+- One disadvantage to regression imputation is that it used the fitted model without error terms. Therefore, the imputed results are too close to the regression line and biased the correlations, reduced the variance of the data.
+
+- Stochastic regression corrected this problem by adding a error term when imputing the values, which potentially better reflect the correlations between variables
+
+
+---
+
+## Stochastic Regression Imputation
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+imputation3 <- mice(airquality, method = "norm.nob", # stochastic regression imputation
+                    m = 1, maxit = 1,
+                    seed = 1, print = FALSE)
+
+data3 <- complete(imputation3)
+
+airquality.ext8 <- airquality %>%
+  mutate(
+    type=ifelse(is.na(Ozone), "Ozone.imp", "Ozone"),
+    Ozone.imp=ifelse(is.na(Ozone), data3[,"Ozone"], Ozone)
+    )
+
+p1 <- airquality.ext8 %>% 
+  ggplot(aes(x=Ozone.imp, fill=type)) +  
+  geom_histogram(position="dodge") +
+  theme_minimal() +
+  scale_fill_viridis_d()
+
+p2 <- airquality.ext8 %>%
+  ggplot(aes(y=Ozone.imp, x=Solar.R, colour=type)) +
+  geom_point() +
+  theme_minimal() +
+  scale_color_viridis_d() 
+
+grid.arrange(p1, p2, ncol=2)
 ```
 
 
 ---
 
-## Regression Imputation
 
-```{r}
-fit3 <- lm(Ozone.imp ~ Solar.R, data = airquality.ext2)
-summary(fit3)
-```
-
-
----
-
-## Imputation techniques
-
-### Multiple imputation 
+## Multiple imputation 
 
 - Missing values are replaced by chained regression, where $m$ complete datasets are generated (`r Citet(bib, "Raghunathan2001")`)
 
@@ -560,24 +568,28 @@ Some advice:
 
 ---
 
+```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+imp <- mice(airquality, seed=1, m=5, print=FALSE)
+```
+
+
 ## Multiple imputation
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
-imp <- mice(airquality, seed=1, m=20, print=FALSE)
+```{r}
+densityplot(imp, thicker = 4)
 ```
 
-```{r}
-fit2 <- lm(Ozone ~ Solar.R, data = airquality)
-summary(fit2)
-```
 
 ---
 
 ## Multiple imputation
 
 ```{r}
-fit <- with(imp, lm(Ozone ~ Solar.R))
-summary(pool(fit))
+#fit <- with(imp, lm(Ozone ~ Solar.R))
+#summary(pool(fit))
+
+
+bwplot(imp)
 ```
 
 ---
@@ -611,6 +623,10 @@ p2 <- airquality.ext4 %>%
 
 grid.arrange(p1, p2, ncol=2)
 ```
+
+---
+
+# Multiple imputation in detail...
 
 
 ---
