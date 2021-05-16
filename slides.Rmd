@@ -300,13 +300,45 @@ background-color: #7899d4
 
 - `r Citet(bib, "Schafer2002")`: *If a missing data problem can be resolved by discarding only a small part of the sample, then the method can be quite effective.*
 
+
 ---
 
 ## Imputation techniques
 
-### Mean/Median imputation
+### Single imputation
 
-Missing values are replaced by the mean value for quantitative variables and by the most frequently occurring category for qualitative variables
+#### Mean/Median imputation
+
+#### Regression Imputation
+
+#### Imputation via
+
+-  neural nets
+
+-  random forest
+
+
+---
+
+## Mean/Median imputation
+
+- Missing values are replaced by 
+
+  - the mean value for quantitative variables 
+  
+  - by the most frequently occurring category for qualitative variables
+  
+- Imputed value is an estimate, thus there is uncertainty about its true value
+
+- Uncertainty is measued by its standard error
+
+- Too small standard errors 
+
+---
+
+
+## Mean/Median imputation
+
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
 require(mice)
@@ -329,11 +361,6 @@ airquality.ext <- airquality %>%
     )
 ```
 
----
-
-
-### Mean/Median imputation
-
 
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
@@ -352,12 +379,27 @@ p2 <- airquality.ext %>%
 grid.arrange(p1, p2, ncol=2)
 ```
 
+---
+
+## Mean/Median imputation
+
+```{r}
+fit2 <- lm(Ozone ~ Solar.R, data = airquality)
+summary(fit2)
+```
 
 ---
 
-## Imputation techniques
+## Mean/Median imputation
 
-### Regression Imputation
+```{r}
+fit4 <- lm(Ozone.imp ~ Solar.R, data = airquality.ext)
+summary(fit4)
+```
+
+---
+
+## Regression Imputation
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
 fit <- lm(Ozone ~ Solar.R, data = airquality.ext)
@@ -394,9 +436,7 @@ extract_eq(fit, use_coefs = FALSE)
 
 ---
 
-### Regression Imputation
-
-
+## Regression Imputation
 
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
@@ -421,7 +461,7 @@ grid.arrange(p1, p2, ncol=2)
 
 ---
 
-### Regression Imputation
+## Regression Imputation
 
 ```{r}
 fit2 <- lm(Ozone ~ Solar.R, data = airquality)
@@ -431,7 +471,7 @@ summary(fit2)
 
 ---
 
-### Regression Imputation
+## Regression Imputation
 
 ```{r}
 fit3 <- lm(Ozone.imp ~ Solar.R, data = airquality.ext2)
@@ -443,9 +483,22 @@ summary(fit3)
 
 ## Imputation techniques
 
-### Multiple imputation by chained equations (`r Citet(bib, "Raghunathan2001")`)
+### Multiple imputation 
 
-Missing values are replaced by chained regression, where $m$ complete datasets are generated
+- Missing values are replaced by chained regression, where $m$ complete datasets are generated (`r Citet(bib, "Raghunathan2001")`)
+
+- Bootstrapping (subselection of the data, do the imputation, ...)
+
+- accounts for uncertainty by creating multiple imputed version of data
+
+- Generative models (draw samples from the estimated distribution)
+
+- MICE (multivariate imputation by chained equations)
+
+<!--
+  - starts with initial imputation e.g. mean imputation
+  - at each cycle only one variable is considered missing and is imputed via other variables
+  - the whole process may be repeated
 
 In multiple imputation data analysis, three steps will be taken:
 
@@ -454,10 +507,12 @@ In multiple imputation data analysis, three steps will be taken:
 - Step 2: Each complete dataset will be analyzed separately by proper standard regression model;
 - Step 3: The analysis results will be pooled together by Rubin’s rules
 
+-->
+
 ---
 
 
-### Multiple imputation
+## Multiple imputation
 
 ![](figs/multiple_imputation.png)
 
@@ -466,74 +521,97 @@ source: https://stefvanbuuren.name/fimd/sec-nutshell.html
 
 ---
 
+## Multiple imputation
 
-### Multiple imputation through support vector machines (`r Citet(bib, "Richman2007")`)
+Accounts for incertainty with the following four-step approach:
 
-Missing values are replaced by repeated application of a support vector regression
+1. Create $m$ complete versions of the data by replacing missing values by plausible ones with a random component
 
----
+1. The $m$ imputed datasets are 
+  - identical for the observed data entries
+  - differ in the imputed values
+  
+  *The magnitude of these difference reflects uncertainty about what value to impute*
+  
+1. Analyze each of the $m$ complete datasets. Each set of parameter estimates differs slightly because of the random component
 
-## Imputation techniques
+1. Pool the $m$ parameter estimates into one estimate. 
+   Variance combines 
+   - the conventional sampling variance (within-imputation variance)
+   - extra variance caused by the missing data (between-imputation variance).
 
-### Multiple imputation by chained equations (`r Citet(bib, "Raghunathan2001")`)
-
-Missing values are replaced by chained regression, where e.g. five complete datasets are generated
-
-### Data augmentation  (`r Citet(bib, "Schafer1997")`)
-
-Use Monte Carlo Methods to generate e.g. five complete datasets
-
----
-
-- Discriminative models
-
-$$X_{\text{miss}} = f(X_{\text{obs}}) (\text{MAR})$$
-
-assume corelation between variables with missing values and the observed variables
-
-$\rightarrow$ find corelation by estimating a function
-
-- Generative models
-
-$$P(X_{\text{miss}})(\text{MCAR})$$
-(estimate normal distribution)
-
-and
-
-$$P(X_{\text{miss}} \mid X_{\text{obs}})(\text{MAR})$$
-
-(estimate conditional distribution)
-
----
-# Single imputation
-
-- Mean substitution (generative)
-- K-nearest neighbor (KNN) (discriminative)
-- Discriminative model training 
-  - linear regression
-  - neural nets
-  - random forest
-
-
-$\rightarrow$ don't account for uncertainty
+<!--
+Under the appropriate conditions, the pooled estimates are unbiased and have the correct statistical properties.
+-->
 
 ---
 
-# Multiple Imputation
+## Multiple imputation
 
-- accounts for uncertainty by creating multiple imputed version of data
+### How large should $m$ be (`r Citet(bib, "Buuren2018")`)?
 
-- Bootstrapping (subselection of the data, do the imputation, ...)
+Classic advice: $m=3, 5, 10$. More recently: set $m$ higher: 20 to 100.
 
-- Generative models (draw samples from the estimated distribution)
+Some advice:
 
-- MICE (multivariate imputation by chained equations)
+- Use $m=5$ or $m=10$ if the fraction of missing information is low
 
-  - starts with initial imputation e.g. mean imputation
-  - at each cycle only one variable is considered missing and is imputed via other variables
-  - the whole process may be repeated
+- Develop your model with $m=5$. Do final run with $m$ equal to percentage of incomplete cases
 
-- denoising autoencoder
+---
+
+## Multiple imputation
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+imp <- mice(airquality, seed=1, m=20, print=FALSE)
+```
+
+```{r}
+fit2 <- lm(Ozone ~ Solar.R, data = airquality)
+summary(fit2)
+```
+
+---
+
+## Multiple imputation
+
+```{r}
+fit <- with(imp, lm(Ozone ~ Solar.R))
+summary(pool(fit))
+```
+
+---
+
+## Multiple imputation
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+require(ggplot2)
+require(gridExtra)
+require(viridis)
+
+data3 <- complete(imp, 1)
+
+airquality.ext4 <- airquality %>%
+  mutate(
+    type=ifelse(is.na(Ozone), "Ozone.imp", "Ozone"),
+    Ozone.imp=ifelse(is.na(Ozone), data3[,"Ozone"], Ozone)
+    )
+
+p1 <- airquality.ext4 %>% 
+  ggplot(aes(x=Ozone.imp, fill=type)) +  
+  geom_histogram(position="dodge") +
+  theme_minimal() +
+  scale_fill_viridis_d()
+
+p2 <- airquality.ext4 %>%
+  ggplot(aes(y=Ozone.imp, x=Solar.R, colour=type)) +
+  geom_point() +
+  theme_minimal() +
+  scale_color_viridis_d() 
+
+grid.arrange(p1, p2, ncol=2)
+```
+
 
 ---
 
@@ -551,10 +629,12 @@ $\rightarrow$ don't account for uncertainty
 
 ---
 
+class: center, middle
+background-color: #7899d4
 
 # Thank you! Questions?
 
-
+---
 
 # Literature
 
@@ -571,6 +651,10 @@ print(bib[key="Richman2007"],
 ```{r, results='asis', echo=FALSE}
 PrintBibliography(bib)
 ```
+
+---
+
+# Literature
 
 - youtube: Reza Sahraeian - The industrial challenge of missing data | PyData Eindhoven 2020
 
