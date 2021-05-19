@@ -31,6 +31,7 @@ knitr::opts_chunk$set(fig.path="figs/", echo=FALSE, warning=FALSE, message=FALSE
 require(ggplot2)
 require(gridExtra)
 require(viridis)
+require(randomForest)
 ```
 
 
@@ -52,15 +53,19 @@ https://www.deeplearning.ai/the-batch/issue-84/
 
 ## Model-Centric view
 
-- Collect what data you can, and develop a model good enough to deal with the noise in the data
+- Collect what data you can
+
+- Develop a model good enough to deal with the noise in the data
 
 - Hold the data fixed and iteratively improve the code/model
 
 ## Data-Centric view
 
-- The consistency of the data is paramount. Use tools to improve the data quality
+- The consistency of the data is paramount
 
-  $\rightarrow$ *this will allow multiple models to do well*
+- Use tools to improve the data quality
+
+  $\rightarrow$ *This will allow multiple models to do well*
 
 - Hold the model fixed and iteratively improve the data
 
@@ -73,11 +78,13 @@ https://www.deeplearning.ai/the-batch/issue-84/
 
 # From big data to good data 
 
-MLOps' most important task: **ensure consistently high-quality data in all phases of the ML project lifecycle**
+MLOps' most important task: 
+
+> ensure consistently high-quality data in all phases of the ML project lifecycle
 
 ## Good data is
 
-- Defined consistently (definition of labels y is unambiguous )
+- Defined consistently (definition of labels y is unambiguous)
 
 - Cover of important cases (good coverage of inputs x)
 
@@ -107,21 +114,54 @@ Can arise for many reasons:
   - Lost data due to machine or human mistakes
   - Bug issues in non-mandatory fields
   - join, merge
-  - different variable per source
-  - different number of categories per source
+  - Different variable per source
+  - Different number of categories per source
   - ...
 
 ---
 
 # The problem
 
-- Using only the complete cases for the analysis can lead to a dramatic information loss
+```{r, echo=TRUE, eval=FALSE}
+x <- c(10, NA, 20, 30, 40, 20)
+
+mean(x)
+```
+
+--
+
+```{r}
+x <- c(10, NA, 20, 30, 40, 20)
+```
+
+
+```{r}
+mean(x)
+```
+
+--
+
+```{r, echo=TRUE, eval=FALSE}
+randomForest(Ozone ~ . , data=airquality)
+```
+
+--
+
+```{r, error=TRUE}
+randomForest(Ozone ~ . , data=airquality)
+```
+
+---
+
+# The problem
 
 - Many AI/ML/Data science methods are developed for complete data
 
+- Using only the complete cases for the analysis can lead to dramatic information loss
+
 - Inappropriate approach imposes noise or bias on data
 
-- Missing data can lead to the risk of incorrect conclusions due to absence of relevant information leading to invalid results
+- Can lead to incorrect conclusions due to absense of relevant information
 
 - The quality of statistical analysis can be only as good as the quality of the data
 
@@ -129,11 +169,13 @@ Can arise for many reasons:
 
 # Terminology
 
-- **full data** $Z=(Z_{\text{obs}}, Z_{\text{mis}})$
+- **Full / complete data** $Z=(Z^{\textrm{obs}}, Z^{\textrm{mis}})$
 
-- **observed data** $Z_{\text{obs}}$ 
+- **Observed / incomplete data** $Z^{\textrm{obs}}$ 
 
-- **missing data** $Z_{\text{mis}}$
+- **Unobserved / missing data** $Z^{\textrm{mis}}$
+
+- **Complete cases** subset of rows without missing values
 
 - Given $n \times p$ data matrix $Z$, which can contain missing data
 
@@ -157,12 +199,11 @@ background-color: #7899d4
 
 # Missing completely at random (MCAR)
 
-Probability of missingness is completely independent from observed and unobserved/missing values
+Probability of missingness is completely independent from observed and unobserved/missing values:
 
-$$P(r_i \mid z_i) = P(r_i \mid z_{i,\,\textrm{obs}}, z_{i,\,\textrm{mis}}) = P(r_i), \quad \text{for} \ i=1,\ldots,n,$$
+$$P(r_i \mid z_i) = P(r_i \mid z_{i}^\textrm{obs}, z_{i}^\textrm{mis}) = P(r_i), \quad \text{for} \ i=1,\ldots,n,$$
 
-where $z_{i,\,\textrm{obs}}$ represents the observed and $z_{i,\,\textrm{mis}}$ the missing values from the $i$-th row $z_i$ of
-the data matrix $Z$.
+$z_{i}^\textrm{obs}$ observed, $z_{i}^\textrm{mis}$ missing values from the $i$-th row $z_i$ of the data matrix $Z$
 
 - No particular reason that the data is missing
 
@@ -174,12 +215,9 @@ the data matrix $Z$.
 
 # Missing at random (MAR)
 
-The probability for missigness of values is only dependent of the 
-observed values $z_{i,\,\textrm{obs}}$ 
+Probability for missigness of values is only dependent of the observed values $z_{i}^\textrm{obs}$ 
 
-$$P(r_i \mid z_i) = P(r_i \mid z_{i,\,\textrm{obs}}, z_{i,\,\textrm{mis}}) = P(r_i \mid z_{i,\,\textrm{obs}}), \quad \text{for} \ i=1,\ldots,n.$$
-
-- Relationship between missing values and observed ones
+$$P(r_i \mid z_i) = P(r_i \mid z_{i}^\textrm{obs}, z_{i}^\textrm{mis}) = P(r_i \mid z_{i}^\textrm{obs}), \quad \text{for} \ i=1,\ldots,n.$$
 
 - More realistic than MCAR 
 
@@ -191,29 +229,40 @@ $$P(r_i \mid z_i) = P(r_i \mid z_{i,\,\textrm{obs}}, z_{i,\,\textrm{mis}}) = P(r
 
 # Missing not at random (MNAR)
 
-The probability for the missigness of values is dependent of the observed $z_{i,\,\textrm{obs}}$ and unobserved values $z_{i,\,\textrm{mis}}$
+Probability for missigness of values is dependent of the observed $z_{i}^\textrm{obs}$ and unobserved values $z_{i}^\textrm{mis}$
 
-$$P(r_i \mid z_i) = P(r_i \mid z_{i,\,\textrm{obs}}, z_{i,\,\textrm{mis}}), \quad \text{for} \ i=1,\ldots,n.$$
+$$P(r_i \mid z_i) = P(r_i \mid z_{i}^\textrm{obs}, z_{i}^\textrm{mis}), \quad \text{for} \ i=1,\ldots,n.$$
 
-- Cause of missingness it not known and we cannot draw any conclusion from observed data
+- Cause of missingness it not known 
+
+- We cannot draw any conclusion from observed data
 
 - **Example:** Weighing scale mechanism may wear out over time, but time is not part of the dataset
 
 
 ---
 
-# Best practices (`r Citet(bib, "Buuren2018")`)
+class: center, middle
+background-color: #7899d4
 
-- Distinguishing the type is missingness is not easy, sometimes it's impossible
-
-- The size and balance of data must be considered before distinguising the type
-
-- Under MCAR, one can analyze the observed observation and ignore discard any missing observations
-
-- Rule of thumb: assume missing at random unless there is a good reason not to!
+# How to deal with missingness
 
 ---
 
+## Strategies to deal with missing data
+
+- Prevention - impossible for ex-post analyses
+
+- Dropping missing values
+
+- Imputation techniques
+
+  - Single imputation
+
+  - Multiple imputation
+
+
+---
 
 class: center, middle
 background-color: #7899d4
@@ -222,7 +271,7 @@ background-color: #7899d4
 
 ---
 
-## airquality dataset
+## Airquality Dataset
 
 - Daily air quality measurements in New York, May to September 1973.
 
@@ -240,7 +289,7 @@ Source: The data were obtained from the New York State Department of Conservatio
 
 ---
 
-## airquality dataset
+## Airquality Dataset
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 require(knitr)
@@ -252,7 +301,7 @@ kable(airquality[1:10,], format = "html")
 
 ---
 
-## missing data pattern
+## Missing data pattern
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 p <- md.pattern(airquality)
@@ -260,7 +309,7 @@ p <- md.pattern(airquality)
 
 ---
 
-## missing value frequency
+## Missing value frequency
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
 require(DataExplorer)
@@ -275,41 +324,19 @@ p
 
 ---
 
-## marginplot
+## Marginplot
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 require(VIM)
-marginplot(airquality[, c("Solar.R", "Ozone")])
+marginplot(airquality[, c("Solar.R", "Ozone")], col = viridis(2))
 ```
 
-- blue one summarizes the distribution of Ozone when Solar.R is missing,  red one summarizes it when it is unobserved
+???
 
-- distribution of observed data given the other variable is observed
-for MCAR, blue and red box plots should be similar
+- Violet box plot summarizes the distribution of Ozone when Solar.R is observed, yellow one summarizes it when it is unobserved
 
-<!--
-- if MCAR is violated, complete case analysis will be biased
--->
-
----
-
-class: center, middle
-background-color: #7899d4
-
-# How to deal with missingness
-
----
-
-## Missing values methods
-
-- Dropping missing values
-
-- Imputation techniques
-
-  - Single imputation
-
-  - Multiple imputation
-
+- Distribution of observed data given the other variable is observed
+for MCAR, violet and yellow box plots should be similar
 
 ---
 
@@ -317,20 +344,21 @@ background-color: #7899d4
 
 ### Listwise deletion
   
-- Cases with missing values are excluded from the data set. 
+- Only the complete cases are analyzed 
 
-- Only the complete cases are analyzed or used.  
-
-- Loss of information dependent on the fraction of missing data
+- Advantages:
+  - Simple - Often the default way of handling incomplete data 
   
-- Often the default way of handling incomplete data 
+  - Under MCAR: unbiased estimates of means, variances and regression weights 
 
-- If the data are MCAR, listwise deletion produces unbiased estimates of means, variances and regression weights.
+  - `r Citet(bib, "Schafer2002")`: *If a missing data problem can be resolved by discarding only a small part of the sample, then the method can be quite effective.*
 
-- `r Citet(bib, "Schafer2002")`: *If a missing data problem can be resolved by discarding only a small part of the sample, then the method can be quite effective.*
-
-
-
+- Disadvantages:
+  - Loss of information dependent on the fraction of missing data
+  
+  - Larger standard errors
+  
+  - Under MAR: biased, even for simple statistics like the mean
 
 ---
 
@@ -338,9 +366,9 @@ background-color: #7899d4
 
 - Missing values are replaced by 
 
-  - the mean value for quantitative variables 
+  - The mean value for quantitative variables 
   
-  - by the most frequently occurring category for qualitative variables
+  - The most frequently occurring category for qualitative variables
   
 - Imputed value is an estimate, thus there is uncertainty about its true value
 
@@ -359,18 +387,12 @@ require(mice)
 require(dplyr)
 require(reshape2)
 
-imp <- mice(airquality, 
-                   method = "mean", # Replace by mean of the other values
-                   m = 1, # Number of multiple imputations. 
-                   maxit = 1,
-                  print=FALSE
-            ) # Number of iteration; mostly useful for  convergence
+imp <- mice(airquality, method = "mean",  m = 1, maxit = 1, print=FALSE) 
 
 data <- complete(imp)
-#airquality.ext <- data.frame(airquality, Ozone.imp=data[,"Ozone"]) %>% #melt(measure.vars=c("Ozone", "Ozone.imp"), variable.name="type")
-airquality.ext <- airquality %>%
+airquality.imp.mean <- airquality %>%
   mutate(
-    type=ifelse(is.na(Ozone), "Ozone.imp", "Ozone"),
+    type=ifelse(is.na(Ozone), "imp", "obs"),
     Ozone.imp=ifelse(is.na(Ozone), data[,"Ozone"], Ozone)
     )
 ```
@@ -378,17 +400,19 @@ airquality.ext <- airquality %>%
 
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
-p1 <- airquality.ext %>% 
+p1 <- airquality.imp.mean %>% 
   ggplot(aes(x=Ozone.imp, fill=type)) +  
   geom_histogram(position="dodge") +
+  xlab("Ozone") +
   theme_minimal() +
-  scale_fill_viridis_d()
+  scale_fill_viridis_d(direction=-1)
 
-p2 <- airquality.ext %>%
+p2 <- airquality.imp.mean %>%
   ggplot(aes(y=Ozone.imp, x=Solar.R, colour=type)) +
   geom_point() +
+  ylab("Ozone") +
   theme_minimal() +
-  scale_color_viridis_d() 
+  scale_color_viridis_d(direction=-1) 
 
 grid.arrange(p1, p2, ncol=2)
 ```
@@ -398,34 +422,24 @@ grid.arrange(p1, p2, ncol=2)
 ## Regression Imputation
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
-fit <- lm(Ozone ~ Solar.R, data = airquality.ext)
-pred <- predict(fit, newdata = data.frame(Solar.R = airquality.ext$Solar.R))
+fit <- lm(Ozone ~ Solar.R, data = airquality.imp.mean)
+pred <- predict(fit, newdata = data.frame(Solar.R = airquality.imp.mean$Solar.R))
 
-# imp2 <- mice(airquality, 
-#                    method = "norm.predict", # Replace by mean of the other values
-#                    m = 1, # Number of multiple imputations. 
-#                    maxit = 1,
-#                   print=FALSE
-#             ) # Number of iteration; mostly useful for  convergence
-# 
-# data2 <- complete(imp2)
-
-airquality.ext2 <- airquality %>%
+airquality.imp.reg <- airquality %>%
   mutate(
-    type=ifelse(is.na(Ozone), "Ozone.imp", "Ozone"),
+    type=ifelse(is.na(Ozone), "imp", "obs"),
     Ozone.imp=ifelse(is.na(Ozone), pred, Ozone)
     )
 ```
 
-- Regression imputation incorporates knowledge of other variables with the idea of producing smarter imputations. 
+- Regression imputation incorporates knowledge of other variables
 
-- The first step involves building a model from the observed data. 
+- The first step involves building a model from the observed data 
 
-- Predictions for the incomplete cases are then calculated under the fitted model, and serve as replacements for the missing data.
+- Calculate predictions for the incomplete cases under the fitted model
 
 ```{r}
 require(equatiomatic)
-
 extract_eq(fit, use_coefs = FALSE)
 ```
 
@@ -440,17 +454,19 @@ require(ggplot2)
 require(gridExtra)
 require(viridis)
 
-p1 <- airquality.ext2 %>% 
+p1 <- airquality.imp.reg %>% 
   ggplot(aes(x=Ozone.imp, fill=type)) +  
   geom_histogram(position="dodge") +
+  xlab("Ozone") +
   theme_minimal() +
-  scale_fill_viridis_d()
+  scale_fill_viridis_d(direction=-1)
 
-p2 <- airquality.ext2 %>%
+p2 <- airquality.imp.reg %>%
   ggplot(aes(y=Ozone.imp, x=Solar.R, colour=type)) +
   geom_point() +
+  ylab("Ozone") +
   theme_minimal() +
-  scale_color_viridis_d() 
+  scale_color_viridis_d(direction=-1) 
 
 grid.arrange(p1, p2, ncol=2)
 ```
@@ -459,9 +475,17 @@ grid.arrange(p1, p2, ncol=2)
 
 ## Stochastic Regression Imputation
 
-- One disadvantage to regression imputation is that it used the fitted model without error terms. Therefore, the imputed results are too close to the regression line and biased the correlations, reduced the variance of the data.
+- Regression imputation disadvantage: 
 
-- Stochastic regression corrected this problem by adding a error term when imputing the values, which potentially better reflect the correlations between variables
+  - Fitted model is used without error terms
+
+  - Imputed results are too close to the regression line
+
+  - Biased correlations, reduced the variance of the data
+
+- Stochastic regression adds an error term when imputing the values
+
+  $\rightarrow$ *Potentially better reflects the correlations between variables*
 
 
 ---
@@ -469,29 +493,29 @@ grid.arrange(p1, p2, ncol=2)
 ## Stochastic Regression Imputation
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
-imputation3 <- mice(airquality, method = "norm.nob", # stochastic regression imputation
-                    m = 1, maxit = 1,
-                    seed = 1, print = FALSE)
+imp.sto.reg <- mice(airquality, method = "norm.nob", m = 1, maxit = 1, seed = 1, print = FALSE)
 
-data3 <- complete(imputation3)
+data3 <- complete(imp.sto.reg)
 
-airquality.ext8 <- airquality %>%
+airquality.imp.storeg <- airquality %>%
   mutate(
-    type=ifelse(is.na(Ozone), "Ozone.imp", "Ozone"),
+    type=ifelse(is.na(Ozone), "imp", "obs"),
     Ozone.imp=ifelse(is.na(Ozone), data3[,"Ozone"], Ozone)
     )
 
-p1 <- airquality.ext8 %>% 
+p1 <- airquality.imp.storeg %>% 
   ggplot(aes(x=Ozone.imp, fill=type)) +  
   geom_histogram(position="dodge") +
+  xlab("Ozone") +
   theme_minimal() +
-  scale_fill_viridis_d()
+  scale_fill_viridis_d(direction=-1)
 
-p2 <- airquality.ext8 %>%
+p2 <- airquality.imp.storeg %>%
   ggplot(aes(y=Ozone.imp, x=Solar.R, colour=type)) +
   geom_point() +
+  ylab("Ozone") +
   theme_minimal() +
-  scale_color_viridis_d() 
+  scale_color_viridis_d(direction=-1) 
 
 grid.arrange(p1, p2, ncol=2)
 ```
@@ -538,7 +562,7 @@ source: https://stefvanbuuren.name/fimd/sec-nutshell.html
 
 ---
 
-## Multiple imputation (`r Citet(bib, "Buuren2018")`)
+## Multiple imputation (`r Citet(bib, "VanBuuren2018")`)
 
 1. Specify an imputation model $P(Y_j^\mathrm{mis}|Y_j^\mathrm{obs}, Y_{-j}, R)$ for variable $Y_j$ with $j=1,\dots,p$.
 
@@ -586,7 +610,7 @@ Under the appropriate conditions, the pooled estimates are unbiased and have the
 
 ## Multiple imputation
 
-### How large should $m$ be (`r Citet(bib, "Buuren2018")`)?
+### How large should $m$ be (`r Citet(bib, "VanBuuren2018")`)?
 
 Classic advice: $m=3, 5, 10$. More recently: set $m$ higher: 20 to 100.
 
@@ -621,6 +645,16 @@ densityplot(imp, thicker = 4)
 
 bwplot(imp)
 ```
+
+---
+
+## Multiple imputation
+
+```{r}
+plot(imp)
+```
+
+One convergence, the different streams should be freely intermingled with each other, without showing any definite trends (`r Citet(bib, "VanBuuren2011")`)
 
 ---
 
@@ -776,13 +810,31 @@ dat.tmp.imp %>%
 
 ## R
 
+- mice 
+
+- VIM
+
+- Amelia
+
 ## Python
+
+---
+
+# Best practices (`r Citet(bib, "VanBuuren2018")`)
+
+- Distinguishing the type of missingness is not easy, sometimes it's impossible
+
+- The size and balance of data must be considered before distinguising the type
+
+- Under MCAR, one can analyze the observed observation and ignore discard any missing observations
+
+- **Rule of thumb:** Assume MAR unless there is a good reason not to!
 
 ---
 
 # Takeaways
 
-- understand the missing type and data before anything (tips: missing rate, balance, correlation, data size, ...)
+- Understand the missing type and data before anything (tips: missing rate, balance, correlation, data size, ...)
 
 - There is no single magical method to deal with missingness, the right choice depends on your data
 
