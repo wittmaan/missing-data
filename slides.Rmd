@@ -65,14 +65,16 @@ https://www.deeplearning.ai/the-batch/issue-84/
 
 - Use tools to improve the data quality
 
-  $\rightarrow$ *This will allow multiple models to do well*
-
 - Hold the model fixed and iteratively improve the data
 
 
 .footnote[
 https://www.deeplearning.ai/the-batch/issue-84/
 ]
+
+???
+
+Data-Centric view $\rightarrow$ *This will allow multiple models to do well*
 
 ---
 
@@ -84,11 +86,11 @@ MLOps' most important task:
 
 ## Good data is
 
-- Defined consistently (definition of labels y is unambiguous)
+- Defined consistently
 
-- Cover of important cases (good coverage of inputs x)
+- Cover of important cases
 
-- Has timely feedback from production data (distribution covers data drift and concept drift)
+- Has timely feedback from production data
 
 - Sized appropriately
 
@@ -96,6 +98,13 @@ MLOps' most important task:
 https://www.deeplearning.ai/the-batch/issue-84/
 ]
 
+???
+
+- Defined consistently (definition of labels y is unambiguous)
+
+- Cover of important cases (good coverage of inputs x)
+
+- Has timely feedback from production data (distribution covers data drift and concept drift)
 
 ---
 
@@ -107,8 +116,6 @@ https://www.deeplearning.ai/the-batch/issue-84/
 
 # Missing data
 
-**Missing data is everwhere** sooner or later anyone who does statistics will encounter missing data
-
 Can arise for many reasons:
   - Non-Response e.g. in surveys
   - Lost data due to machine or human mistakes
@@ -117,6 +124,10 @@ Can arise for many reasons:
   - Different variable per source
   - Different number of categories per source
   - ...
+
+???
+
+**Missing data is everwhere** sooner or later anyone who does statistics will encounter missing data
 
 ---
 
@@ -489,8 +500,11 @@ grid.arrange(p1, p2, ncol=2)
 
 - Stochastic regression adds an error term when imputing the values
 
-  $\rightarrow$ *Potentially better reflects the correlations between variables*
+???
 
+- Stochastic regression adds an error term when imputing the values
+
+  $\rightarrow$ *Potentially better reflects the correlations between variables*
 
 ---
 
@@ -537,7 +551,7 @@ grid.arrange(p1, p2, ncol=2)
 
 - Bootstrapping (subselection of the data, do the imputation, ...)
 
-- accounts for uncertainty by creating multiple imputed version of data
+- Accounts for uncertainty by creating multiple imputed version of data
 
 - Generative models (draw samples from the estimated distribution)
 
@@ -565,7 +579,7 @@ In multiple imputation data analysis, three steps will be taken:
 ![](figs/multiple_imputation.png)
 
 
-source: https://stefvanbuuren.name/fimd/sec-nutshell.html
+Source: https://stefvanbuuren.name/fimd/sec-nutshell.html
 
 ---
 
@@ -600,8 +614,6 @@ source: https://stefvanbuuren.name/fimd/sec-nutshell.html
   - identical for the observed data entries
   - differ in the imputed values
   
-  *The magnitude of these difference reflects uncertainty about what value to impute*
-  
 1. Analyze each of the $m$ complete datasets. Each set of parameter estimates differs slightly because of the random component
 
 1. Pool the $m$ parameter estimates into one estimate. 
@@ -609,9 +621,13 @@ source: https://stefvanbuuren.name/fimd/sec-nutshell.html
    - the conventional sampling variance (within-imputation variance)
    - extra variance caused by the missing data (between-imputation variance).
 
-<!--
-Under the appropriate conditions, the pooled estimates are unbiased and have the correct statistical properties.
--->
+???
+
+1. The $m$ imputed datasets are 
+  - identical for the observed data entries
+  - differ in the imputed values
+  
+  *The magnitude of these difference reflects uncertainty about what value to impute*
 
 ---
 
