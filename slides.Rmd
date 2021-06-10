@@ -226,7 +226,7 @@ $z_{i}^\textrm{obs}$ observed, $z_{i}^\textrm{mis}$ missing values from the $i$-
 
 # Missing at random (MAR)
 
-Probability for missigness of values is only dependent of the observed values $z_{i}^\textrm{obs}$ 
+Probability of missigness of values is only dependent of the observed values $z_{i}^\textrm{obs}$ 
 
 $$P(r_i \mid z_i) = P(r_i \mid z_{i}^\textrm{obs}, z_{i}^\textrm{mis}) = P(r_i \mid z_{i}^\textrm{obs}), \quad \text{for} \ i=1,\ldots,n.$$
 
@@ -240,7 +240,7 @@ $$P(r_i \mid z_i) = P(r_i \mid z_{i}^\textrm{obs}, z_{i}^\textrm{mis}) = P(r_i \
 
 # Missing not at random (MNAR)
 
-Probability for missigness of values is dependent of the observed $z_{i}^\textrm{obs}$ and unobserved values $z_{i}^\textrm{mis}$
+Probability of missigness of values is dependent of the observed $z_{i}^\textrm{obs}$ and unobserved values $z_{i}^\textrm{mis}$
 
 $$P(r_i \mid z_i) = P(r_i \mid z_{i}^\textrm{obs}, z_{i}^\textrm{mis}), \quad \text{for} \ i=1,\ldots,n.$$
 
@@ -318,6 +318,14 @@ kable(airquality[1:10,], format = "html")
 p <- md.pattern(airquality)
 ```
 
+???
+
+- Only missing values in Solar.R and Ozone
+
+- Missing values only at Ozone 35 times, only at Solar.R 5 times
+
+- Missing Ozone and Solar.R 2 times
+
 ---
 
 ## Missing value frequency
@@ -344,10 +352,11 @@ marginplot(airquality[, c("Solar.R", "Ozone")], col = viridis(2))
 
 ???
 
+- Boxplot: Box 25th and 75th percentile, bar within the box median/50th percentile, Whisker IQR times 1.5
+
 - Violet box plot summarizes the distribution of Ozone when Solar.R is observed, yellow one summarizes it when it is unobserved
 
-- Distribution of observed data given the other variable is observed
-for MCAR, violet and yellow box plots should be similar
+- For MCAR, violet and yellow box plots should be similar
 
 ---
 
@@ -428,6 +437,16 @@ p2 <- airquality.imp.mean %>%
 grid.arrange(p1, p2, ncol=2)
 ```
 
+???
+
+- Mean imputation distorts the distribution in several ways.
+
+- Figure on the left, the yellow bar stands out
+
+- Imputing the mean creates a bimodal distribution
+
+- The relation between Solar.R and Ozone is distorted because of the imputations.
+
 ---
 
 ## Regression Imputation
@@ -483,6 +502,8 @@ grid.arrange(p1, p2, ncol=2)
 ```
 
 ???
+
+- Imputed values correspond to the most likely values under the model.
 
 - Almost no variation in the imputed values
 
