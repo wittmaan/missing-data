@@ -561,6 +561,8 @@ grid.arrange(p1, p2, ncol=2)
 
 ???
 
+- Figure shows that the addition of noise to the predictions opens up the distribution of the imputed values, as intended.
+
 - Negative values imputed
 
 ---
@@ -570,37 +572,14 @@ grid.arrange(p1, p2, ncol=2)
 
 - Missing values are replaced by chained regression, where $m$ complete datasets are generated (`r Citet(bib, "Raghunathan2001")`)
 
-- Bootstrapping (subselection of the data, do the imputation, ...)
-
 - Accounts for uncertainty by creating multiple imputed version of data
+
+- Bootstrapping (subselection of the data, do the imputation, ...)
 
 - Generative models (draw samples from the estimated distribution)
 
 - MICE (multivariate imputation by chained equations)
 
-<!--
-  - starts with initial imputation e.g. mean imputation
-  - at each cycle only one variable is considered missing and is imputed via other variables
-  - the whole process may be repeated
-
-In multiple imputation data analysis, three steps will be taken:
-
-- Step 0: Set imputation model
-- Step 1: The incomplete dataset will be imputed $m$ times;
-- Step 2: Each complete dataset will be analyzed separately by proper standard regression model;
-- Step 3: The analysis results will be pooled together by Rubin’s rules
-
--->
-
----
-
-
-## Multiple imputation
-
-![](figs/multiple_imputation.png)
-
-
-Source: https://stefvanbuuren.name/fimd/sec-nutshell.html
 
 ---
 
@@ -629,11 +608,21 @@ Source: https://stefvanbuuren.name/fimd/sec-nutshell.html
 
 ## Multiple imputation
 
+![](figs/multiple_imputation.png)
+
+
+
+Source: https://stefvanbuuren.name/fimd/sec-nutshell.html
+
+???
+
 1. Create $m$ complete versions of the data by replacing missing values by plausible ones with a random component (steps 1 to 3)
 
 1. The $m$ imputed datasets are 
   - identical for the observed data entries
   - differ in the imputed values
+  
+*The magnitude of these difference reflects uncertainty about what value to impute*
   
 1. Analyze each of the $m$ complete datasets. Each set of parameter estimates differs slightly because of the random component
 
@@ -642,13 +631,6 @@ Source: https://stefvanbuuren.name/fimd/sec-nutshell.html
    - the conventional sampling variance (within-imputation variance)
    - extra variance caused by the missing data (between-imputation variance).
 
-???
-
-1. The $m$ imputed datasets are 
-  - identical for the observed data entries
-  - differ in the imputed values
-  
-  *The magnitude of these difference reflects uncertainty about what value to impute*
 
 ---
 
@@ -677,18 +659,28 @@ imp <- mice(airquality, seed=1, m=5, maxit = 50, print=FALSE)
 densityplot(imp, thicker = 4)
 ```
 
+???
+
+- Densityplot shows the kernel density estimates of the imputed (thin red lines) and the observed data.
+
+- In this case the distributions match up well
+
+- Interpretation could be more diffcult if there are discrepancies, 
+caused e.g. by a bad imputation model.
 
 ---
 
 ## Multiple imputation
 
 ```{r}
-#fit <- with(imp, lm(Ozone ~ Solar.R))
-#summary(pool(fit))
-
-
-bwplot(imp)
+stripplot(imp)
 ```
+
+- stripplot shows the individual points for numerical variable per imputation 
+
+- stripplot is useful to study the distributions in datasets with a low number of data points. 
+
+- For large datasets it is more appropriate to use side-by-side box-and-whisker plots for the observed and synthetic data.
 
 ---
 
@@ -700,7 +692,11 @@ plot(imp)
 
 ???
 
-One convergence, the different streams should be freely intermingled with each other, without showing any definite trends (`r Citet(bib, "VanBuuren2011")`)
+- shows mean and standard deviation of the variables through the iterations for the m 
+
+- imputed datasets. An indicator of convergence is how well the m parallel chains mix.
+
+- One convergence, the different streams should be freely intermingled with each other, without showing any definite trends (`r Citet(bib, "VanBuuren2011")`)
 
 ---
 
@@ -733,6 +729,18 @@ p2 <- airquality.ext4 %>%
 
 grid.arrange(p1, p2, ncol=2)
 ```
+
+???
+
+- shows the distribution and scattergram for the observed and imputed data combined. The imputations are taken from the first completed dataset. 
+
+- The violet and yellow distributions are quite similar. 
+
+- Problems with the negative values as in stochastic regression imputation are now gone 
+
+- The yellow points respect the heteroscedastic nature of the relation between Ozone and Solar.R. 
+
+- All in all, the yellow points look as if they could have been measured if they had not been missing.
 
 ---
 
