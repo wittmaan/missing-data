@@ -2,7 +2,7 @@
 title: "Missing Data"
 subtitle: "and how to deal with them..."
 author: "Andreas Wittmann"
-date: "2021/06/11  (updated: `r Sys.Date()`)"
+date: "2021/07/09  (updated: `r Sys.Date()`)"
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -34,85 +34,6 @@ require(viridis)
 require(randomForest)
 ```
 
-
-
-class: center, middle
-background-color: #7899d4
-
-# Machine Learning development from <br> Model-Centric to Data-Centric
-
-Andrew Ng: 
-
-> When a system isn’t performing well, many teams instinctually try to improve the code.<br> But for many practical applications, it’s more effective instead to focus on improving the data,
-
-.footnote[
-https://www.deeplearning.ai/the-batch/issue-84/
-]
-
----
-
-## Model-Centric view
-
-- Collect what data you can
-
-- Develop a model good enough to deal with the noise in the data
-
-- Hold the data fixed and iteratively improve the code/model
-
-## Data-Centric view
-
-- The consistency of the data is paramount
-
-- Use tools to improve the data quality
-
-- Hold the model fixed and iteratively improve the data
-
-
-.footnote[
-https://www.deeplearning.ai/the-batch/issue-84/
-]
-
-???
-
-Data-Centric view $\rightarrow$ *This will allow multiple models to do well*
-
----
-
-# From big data to good data 
-
-MLOps' most important task: 
-
-> ensure consistently high-quality data in all phases of the ML project lifecycle
-
-## Good data is
-
-- Defined consistently
-
-- Cover of important cases
-
-- Has timely feedback from production data
-
-- Sized appropriately
-
-.footnote[
-https://www.deeplearning.ai/the-batch/issue-84/
-]
-
-???
-
-- Defined consistently (definition of labels y is unambiguous)
-
-- Cover of important cases (good coverage of inputs x)
-
-- Has timely feedback from production data (distribution covers data drift and concept drift)
-
----
-
-# Good data without missing data
-
-- Getting high-quality data also includes tackling noise data
-
-- Data can become noise caused of missings
 
 # Missing data
 
@@ -300,21 +221,12 @@ Source: The data were obtained from the New York State Department of Conservatio
 
 ---
 
-## Airquality Dataset
+## Missing data pattern
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
 require(knitr)
 require(VIM)
 require(mice)
-kable(airquality[1:10,], format = "html")
-```
-
-
----
-
-## Missing data pattern
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
 p <- md.pattern(airquality)
 ```
 
@@ -325,38 +237,6 @@ p <- md.pattern(airquality)
 - Missing values only at Ozone 35 times, only at Solar.R 5 times
 
 - Missing Ozone and Solar.R 2 times
-
----
-
-## Missing value frequency
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
-require(DataExplorer)
-p <- plot_missing(airquality) +   
-  theme_minimal() +
-  scale_fill_viridis_d() 
-```
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-p
-```
-
----
-
-## Marginplot
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
-require(VIM)
-marginplot(airquality[, c("Solar.R", "Ozone")], col = viridis(2))
-```
-
-???
-
-- Boxplot: Box 25th and 75th percentile, bar within the box median/50th percentile, Whisker IQR times 1.5
-
-- Violet box plot summarizes the distribution of Ozone when Solar.R is observed, yellow one summarizes it when it is unobserved
-
-- For MCAR, violet and yellow box plots should be similar
 
 ---
 
@@ -630,120 +510,7 @@ Source: https://stefvanbuuren.name/fimd/sec-nutshell.html
    Variance combines 
    - the conventional sampling variance (within-imputation variance)
    - extra variance caused by the missing data (between-imputation variance).
-
-
----
-
-## Multiple imputation
-
-### How large should $m$ be (`r Citet(bib, "VanBuuren2018")`)?
-
-Classic advice: $m=3, 5, 10$. More recently: set $m$ higher: 20 to 100.
-
-Some advice:
-
-- Use $m=5$ or $m=10$ if the fraction of missing information is low
-
-- Develop your model with $m=5$. Do final run with $m$ equal to percentage of incomplete cases
-
----
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
-imp <- mice(airquality, seed=1, m=5, maxit = 50, print=FALSE)
-```
-
-
-## Multiple imputation
-
-```{r}
-densityplot(imp, thicker = 4)
-```
-
-???
-
-- Densityplot shows the kernel density estimates of the imputed (thin red lines) and the observed data.
-
-- In this case the distributions match up well
-
-- Interpretation could be more diffcult if there are discrepancies, 
-caused e.g. by a bad imputation model.
-
----
-
-## Multiple imputation
-
-```{r}
-stripplot(imp)
-```
-
-???
-
-- stripplot shows the individual points for numerical variable per imputation 
-
-- stripplot is useful to study the distributions in datasets with a low number of data points. 
-
-- For large datasets it is more appropriate to use side-by-side box-and-whisker plots for the observed and synthetic data.
-
----
-
-## Multiple imputation
-
-```{r}
-plot(imp)
-```
-
-???
-
-- shows mean and standard deviation of the variables through the iterations for the m 
-
-- imputed datasets. An indicator of convergence is how well the m parallel chains mix.
-
-- One convergence, the different streams should be freely intermingled with each other, without showing any definite trends (`r Citet(bib, "VanBuuren2011")`)
-
----
-
-## Multiple imputation
-
-```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
-require(ggplot2)
-require(gridExtra)
-require(viridis)
-
-data3 <- complete(imp, 1)
-
-airquality.ext4 <- airquality %>%
-  mutate(
-    type=ifelse(is.na(Ozone), "Ozone.imp", "Ozone"),
-    Ozone.imp=ifelse(is.na(Ozone), data3[,"Ozone"], Ozone)
-    )
-
-p1 <- airquality.ext4 %>% 
-  ggplot(aes(x=Ozone.imp, fill=type)) +  
-  geom_histogram(position="dodge") +
-  theme_minimal() +
-  scale_fill_viridis_d()
-
-p2 <- airquality.ext4 %>%
-  ggplot(aes(y=Ozone.imp, x=Solar.R, colour=type)) +
-  geom_point() +
-  theme_minimal() +
-  scale_color_viridis_d() 
-
-grid.arrange(p1, p2, ncol=2)
-```
-
-???
-
-- shows the distribution and scattergram for the observed and imputed data combined. The imputations are taken from the first completed dataset. 
-
-- The violet and yellow distributions are quite similar. 
-
-- Problems with the negative values as in stochastic regression imputation are now gone 
-
-- The yellow points respect the heteroscedastic nature of the relation between Ozone and Solar.R. 
-
-- All in all, the yellow points look as if they could have been measured if they had not been missing.
-
+   
 ---
 
 # Multiple imputation in detail...
@@ -862,53 +629,56 @@ dat.tmp.imp %>%
 
 ---
 
-# Software (R)
+## Multiple imputation
 
-### mice
+```{r, echo=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+require(ggplot2)
+require(gridExtra)
+require(viridis)
+imp <- mice(airquality, seed=1, m=5, maxit = 50, print=FALSE)
 
-Multiple imputation using Fully Conditional Specification (FCS) implemented by the MICE algorithm as described in Van Buuren and Groothuis-Oudshoorn (2011)
+data3 <- complete(imp, 1)
 
-### VIM 
+airquality.ext4 <- airquality %>%
+  mutate(
+    type=ifelse(is.na(Ozone), "Ozone.imp", "Ozone"),
+    Ozone.imp=ifelse(is.na(Ozone), data3[,"Ozone"], Ozone)
+    )
 
-New tools for the visualization of missing and/or imputed values are introduced, which can be used for exploring the data and the structure of the missing and/or imputed values.
+p1 <- airquality.ext4 %>% 
+  ggplot(aes(x=Ozone.imp, fill=type)) +  
+  geom_histogram(position="dodge") +
+  theme_minimal() +
+  scale_fill_viridis_d()
 
-### Amelia
+p2 <- airquality.ext4 %>%
+  ggplot(aes(y=Ozone.imp, x=Solar.R, colour=type)) +
+  geom_point() +
+  theme_minimal() +
+  scale_color_viridis_d() 
 
-Implements Bootstrap multiple imputation using EM to estimate the parameters, for quantitative data it imputes assuming a Multivariate Gaussian distribution.
+grid.arrange(p1, p2, ncol=2)
+```
 
----
+???
 
-# Software (Python)
+- shows the distribution and scattergram for the observed and imputed data combined. The imputations are taken from the first completed dataset. 
 
-### sklearn.impute
+- The violet and yellow distributions are quite similar. 
 
-- SimpleImputer: Imputation transformer for completing missing values.
-- IterativeImputer: Multivariate imputer that estimates each feature from all the others.
-- KNNImputer: Imputation for completing missing values using k-Nearest Neighbors.
+- Problems with the negative values as in stochastic regression imputation are now gone 
 
-### missingno
+- The yellow points respect the heteroscedastic nature of the relation between Ozone and Solar.R. 
 
-Small toolset of flexible and easy-to-use missing data visualizations and utilities that allows you to get a quick visual summary of the completeness (or lack thereof) of your dataset.
-
-### fancyimpute
-
-A variety of matrix completion and imputation algorithms (including MICE) implemented in Python 3.6.
-
----
-
-# Best practices (`r Citet(bib, "VanBuuren2018")`)
-
-- Distinguishing the type of missingness is not easy, sometimes it's impossible
-
-- The size and balance of data must be considered before distinguising the type
-
-- Under MCAR, one can analyze the observed observation and ignore discard any missing observations
-
-- **Rule of thumb:** Assume MAR unless there is a good reason not to!
+- All in all, the yellow points look as if they could have been measured if they had not been missing.
 
 ---
 
 # Takeaways
+
+- Under MCAR, one can analyze the observed observation and ignore discard any missing observations
+
+- **Rule of thumb:** Assume MAR unless there is a good reason not to!
 
 - Understand the missing type and data before anything (tips: missing rate, balance, correlation, data size, ...)
 
