@@ -103,7 +103,7 @@ randomForest(Ozone ~ . , data=airquality)
 
 - **Full / complete data** $Z=(Z^{\textrm{obs}}, Z^{\textrm{mis}})$
 
-- **Observed / incomplete data** $Z^{\textrm{obs}}$ 
+- **Observed data** $Z^{\textrm{obs}}$ 
 
 - **Unobserved / missing data** $Z^{\textrm{mis}}$
 
@@ -450,16 +450,43 @@ grid.arrange(p1, p2, ncol=2)
 
 ## Multiple imputation 
 
-- Missing values are replaced by chained regression, where $m$ complete datasets are generated (`r Citet(bib, "Raghunathan2001")`)
-
 - Accounts for uncertainty by creating multiple imputed version of data
 
 - Bootstrapping (subselection of the data, do the imputation, ...)
 
 - Generative models (draw samples from the estimated distribution)
 
-- MICE (multivariate imputation by chained equations)
+- MICE (multivariate imputation by chained equations):
+  Missing values are replaced by chained regression, where $m$ complete datasets are generated (`r Citet(bib, "Raghunathan2001")`)
 
+
+---
+
+## Multiple imputation
+
+![](figs/multiple_imputation.png)
+
+
+
+Source: https://stefvanbuuren.name/fimd/sec-nutshell.html
+
+???
+
+1. Create $m$ complete versions of the data by replacing missing values by plausible ones with a random component 
+
+1. The $m$ imputed datasets are 
+  - identical for the observed data entries
+  - differ in the imputed values
+  
+*The magnitude of these difference reflects uncertainty about what value to impute*
+  
+1. Analyze each of the $m$ complete datasets. Each set of parameter estimates differs slightly because of the random component
+
+1. Pool the $m$ parameter estimates into one estimate. 
+   Variance combines 
+   - the conventional sampling variance (within-imputation variance)
+   - extra variance caused by the missing data (between-imputation variance).
+   
 
 ---
 
@@ -484,33 +511,6 @@ grid.arrange(p1, p2, ncol=2)
 
 9. End repeat $t$.
 
----
-
-## Multiple imputation
-
-![](figs/multiple_imputation.png)
-
-
-
-Source: https://stefvanbuuren.name/fimd/sec-nutshell.html
-
-???
-
-1. Create $m$ complete versions of the data by replacing missing values by plausible ones with a random component (steps 1 to 3)
-
-1. The $m$ imputed datasets are 
-  - identical for the observed data entries
-  - differ in the imputed values
-  
-*The magnitude of these difference reflects uncertainty about what value to impute*
-  
-1. Analyze each of the $m$ complete datasets. Each set of parameter estimates differs slightly because of the random component
-
-1. Pool the $m$ parameter estimates into one estimate. 
-   Variance combines 
-   - the conventional sampling variance (within-imputation variance)
-   - extra variance caused by the missing data (between-imputation variance).
-   
 ---
 
 # Multiple imputation in detail...

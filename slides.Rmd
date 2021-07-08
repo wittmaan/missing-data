@@ -182,7 +182,7 @@ randomForest(Ozone ~ . , data=airquality)
 
 - **Full / complete data** $Z=(Z^{\textrm{obs}}, Z^{\textrm{mis}})$
 
-- **Observed / incomplete data** $Z^{\textrm{obs}}$ 
+- **Observed data** $Z^{\textrm{obs}}$ 
 
 - **Unobserved / missing data** $Z^{\textrm{mis}}$
 
